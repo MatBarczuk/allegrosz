@@ -1,1 +1,1 @@
-from allegrosz.forms.item_forms import NewItemForm
+from allegrosz.forms.item_forms import NewItemForm, DeleteItemForm, FilterForm

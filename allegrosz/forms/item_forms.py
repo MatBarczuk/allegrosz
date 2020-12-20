@@ -28,3 +28,12 @@ class EditItemForm(ItemForm):
 
 class DeleteItemForm(FlaskForm):
     submit = SubmitField('Delete item')
+
+
+class FilterForm(FlaskForm):
+    title = StringField('Title', validators=[Length(max=20, message='Less than 20 characters.')])
+    description = StringField('Description', validators=[Length(max=40, message='Less than 40 characters.')])
+    price = SelectField('Price', coerce=int, choices=[(0, '---'), (1, 'Max to min'), (2, 'Min to max')])
+    category = SelectField('Category', coerce=int)
+    subcategory = SelectField('Subcategory', coerce=int)
+    submit = SubmitField('Filter')
