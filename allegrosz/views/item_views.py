@@ -3,6 +3,7 @@ from flask_wtf.file import FileRequired
 from werkzeug.exceptions import abort
 from werkzeug.utils import redirect
 
+from ..forms.comment_forms import CommentForm
 from ..helpers import save_image_upload
 from ..dbs.dbs import get_db
 from ..forms.item_forms import NewItemForm, EditItemForm, DeleteItemForm
@@ -75,8 +76,20 @@ def item(item_id):
         db_item = {}
 
     if db_item:
+        comments_from_db = c.execute('''SELECT content FROM comment
+            WHERE item_id = ? ORDER BY id DESC
+        ''', (item_id,))
+
+        comments = [{"content": row[0]} for row in comments_from_db]
+
+        comment_form = CommentForm()
+        comment_form.item_id.data = item_id
+
         delete_form = DeleteItemForm()
-        return render_template('item.html', item=db_item, delete_form=delete_form)
+        return render_template('item.html', item=db_item, deleteForm=delete_form, commentForm=comment_form,
+                               comments=comments)
+
+    return redirect(url_for('main.index'))
 
 
 @bp_item.route('/edit/<int:item_id>', methods=['GET', 'POST'])
@@ -145,11 +158,17 @@ def delete(item_id):
 
     row = c.fetchone()
 
-    if row is not None:
-        c.execute('DELETE FROM item WHERE id = ?', (item_id,))
-        conn.commit()
-        flash(f'Item has been successfully deleted.', 'success')
-    else:
-        flash(f'This item does not exist.', 'danger')
+    form = DeleteItemForm()
 
-    return redirect(url_for('main.index'))
+    if form.validate_on_submit():
+        if row is not None:
+            c.execute('DELETE FROM item WHERE id = ?', (item_id,))
+            conn.commit()
+            flash(f'Item has been successfully deleted.', 'success')
+        else:
+            flash(f'This item does not exist.', 'danger')
+
+        return redirect(url_for('main.index'))
+
+    flash('Wrong price.', 'danger')
+    return redirect(url_for('items.item', item_id=item_id))
